@@ -1,6 +1,6 @@
 on:
  workflow_call:
-   inputs:     
+   inputs:
       targetProjectPath:
         type: string
         default: 'src'
@@ -17,19 +17,17 @@ on:
       buildOutputPath:
         type: string
         default: 'release' 
-      dependencies: 
-        type: array
-        default: []
+      # dependencies: 
+      #   type: array
+      #   default: []
 
-jobs:
-       
-  build:
-   
+jobs:       
+  build:   
     env:
       ACTIONS_STEP_DEBUG : true
       ACTIONS_RUNNER_DEBUG : true
 
-    needs: ${{ inputs.dependencies }}
+    #needs: ${{ inputs.dependencies }}
 
     runs-on: ${{ inputs.agent }}
     strategy:
