@@ -1,8 +1,6 @@
-name: dotnet package
-
 on:
  workflow_call:
-   inputs:     
+   inputs:
       targetProjectPath:
         type: string
         default: 'src'
@@ -19,19 +17,17 @@ on:
       buildOutputPath:
         type: string
         default: 'release' 
-      dependencies: 
-        type: array
-        default: []
+      # dependencies: 
+      #   type: array
+      #   default: []
 
-jobs:
-       
-  build:
-   
+jobs:       
+  build:   
     env:
       ACTIONS_STEP_DEBUG : true
       ACTIONS_RUNNER_DEBUG : true
 
-    needs: ${{ inputs.dependencies }}
+    #needs: ${{ inputs.dependencies }}
 
     runs-on: ${{ inputs.agent }}
     strategy:
@@ -57,17 +53,17 @@ jobs:
       - name: build project(s)
         if: success()
         run: | 
-            cd ${{ github.workspace }}
-            cd ${{ inputs.targetProjectPath }}
-
+            cd ${{ github.workspace }}/${{ inputs.targetProjectPath }}
             dotnet restore
             dotnet build 
-            dotnet build --configuration Release --output ${{ inputs.buildOutputPath }}
+            dotnet build --configuration Release
      
       - name: create package for project(s)
         if: ${{ inputs.publishNuget }}
         run: | 
-            dotnet pack -c Release /p:Version=1.0.${{ github.run_number }} --output targetPackage
+            cd ${{ github.workspace }}/${{ inputs.targetProjectPath }}
+            ls -al -R
+            dotnet pack --no-build --no-restore . /p:Version=1.0.${{ github.run_number }} --output targetPackage
             ls -al -R targetPackage
             dotnet nuget push ${{ github.workspace }}/${{ inputs.targetProjectPath }}/targetPackage/*.nupkg
             
