@@ -61,6 +61,7 @@ jobs:
       - name: create package for project(s)
         if: ${{ inputs.publishNuget }}
         run: | 
+            ls -al -R
             dotnet pack --no-build --no-restore . /p:Version=1.0.${{ github.run_number }} --output targetPackage
             ls -al -R targetPackage
             dotnet nuget push ${{ github.workspace }}/${{ inputs.targetProjectPath }}/targetPackage/*.nupkg
