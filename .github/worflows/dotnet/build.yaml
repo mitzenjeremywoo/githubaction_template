@@ -1,0 +1,85 @@
+name: dotnet package
+
+on:
+ workflow_call:
+   inputs:
+      message:
+        type: string
+        required: true
+      targetProjectPath:
+        type: string
+        default: 'src'
+        required: true
+      agent:
+        type: string
+        default: 'ubuntu-latest'
+      nugetUrl:
+        type: string
+        default: 'https://nuget.pkg.github.com/mitzenjeremywoo/index.json'
+      publishNuget: 
+        type: boolean
+        default: false
+      buildOutputPath:
+        type: string
+        default: 'release' 
+      dependencies: 
+        type: array
+        default: []
+
+jobs:
+       
+  build:
+   
+    env:
+      ACTIONS_STEP_DEBUG : true
+      ACTIONS_RUNNER_DEBUG : true
+
+    needs: ${{ inputs.dependencies }}
+
+    runs-on: ${{ inputs.agent }}
+    strategy:
+      matrix:
+        dotnet-version: ['8.0.x']
+
+    steps:
+      - uses: actions/checkout@v4
+     
+      - name: Setup dotnet ${{ matrix.dotnet-version }}
+        if: success()
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: ${{ matrix.dotnet-version }}
+          source-url: ${{ inputs.nugetUrl }}
+        env:
+          NUGET_AUTH_TOKEN: ${{secrets.GITHUB_TOKEN}}
+
+      - name: Display dotnet version
+        if: success()
+        run: dotnet --version
+    
+      - name: build project(s)
+        if: success()
+        run: | 
+            cd ${{ github.workspace }}
+            cd ${{ inputs.targetProjectPath }}
+
+            dotnet restore
+            dotnet build 
+            dotnet build --configuration Release --output ${{ inputs.buildOutputPath }}
+     
+      - name: create package for project(s)
+        if: ${{ inputs.publishNuget }}
+        run: | 
+            dotnet pack -c Release /p:Version=1.0.${{ github.run_number }} --output targetPackage
+            ls -al -R targetPackage
+            dotnet nuget push ${{ github.workspace }}/${{ inputs.targetProjectPath }}/targetPackage/*.nupkg
+            
+      - name: upload artifacts 
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: artifact-${{ matrix.dotnet-version }}
+          path: ${{ github.workspace  }}/src/ConsoleApp1/ConsoleApp1/bin/Release/net8.0/
+        
+
+      
