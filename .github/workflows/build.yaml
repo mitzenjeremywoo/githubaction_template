@@ -53,17 +53,15 @@ jobs:
       - name: build project(s)
         if: success()
         run: | 
-            cd ${{ github.workspace }}
-            cd ${{ inputs.targetProjectPath }}
-
+            cd ${{ github.workspace }}/${{ inputs.targetProjectPath }}
             dotnet restore
             dotnet build 
-            dotnet build --configuration Release --output ${{ inputs.buildOutputPath }}
+            dotnet build --configuration Release
      
       - name: create package for project(s)
         if: ${{ inputs.publishNuget }}
         run: | 
-            dotnet pack -c Release /p:Version=1.0.${{ github.run_number }} --output targetPackage
+            dotnet pack -c Release /p:Version=1.0.${{ github.run_number }}
             ls -al -R targetPackage
             dotnet nuget push ${{ github.workspace }}/${{ inputs.targetProjectPath }}/targetPackage/*.nupkg
             
